@@ -1,0 +1,13 @@
+DROP TABLE IF EXISTS address;
+
+CREATE TABLE address
+(
+    id INT UNSIGNED AUTO_INCREMENT NOT NULL,
+    name VARCHAR(128) NOT NULL,
+    street1 VARCHAR(64) NOT NULL,
+    street2 VARCHAR(64),
+    city VARCHAR(64) NOT NULL,
+    state CHAR(2) NOT NULL,
+    zip CHAR(10) NOT NULL,
+    PRIMARY KEY(id)
+);
