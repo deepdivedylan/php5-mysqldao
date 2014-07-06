@@ -65,6 +65,22 @@ class MySQLDAOTest extends UnitTestCase
         $this->address->setStreet2("Building 404");
         $this->address->update($this->mysqli);
     }
+    
+    public function testStaticMethodByPrimaryKey()
+    {
+        $address = Address::getAddressById($this->mysqli, 7);
+        $this->assertEqual($address->getId(), 7);
+    }
+    
+    public function testStaticMethodByNonPrimaryKey()
+    {
+        $addresses = Address::getAddressByName($this->mysqli, "Borisimo Industries");
+        foreach($addresses as $address)
+        {
+            $this->assertTrue($address->getId() > 0);
+            $this->assertEqual($address->getName(), "Borisimo Industries");
+        }
+    }
 
     public function tearDown()
     {
