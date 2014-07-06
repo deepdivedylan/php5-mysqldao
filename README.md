@@ -8,7 +8,9 @@ This class is the abstract class for the mySQL Data Access Object (DAO) pattern.
 - delete(&$mysqli);
 - insert(&$mysqli);
 - update(&$mysqli);
+- Table::getTableByField(&$mysqli, $fieldValue)
 
+Note that the static method is dynamically generated based on the field that is queried.
 In order to use the DAO pattern, subclasses must have the following protected static variables:
 
 - dao_primaryKey: string containing the primary key's field name
@@ -17,3 +19,4 @@ In order to use the DAO pattern, subclasses must have the following protected st
 is the data type according to mysqli_stmt::bind_param().
 
 An example PHP class using the DAO pattern is included.
+This requires PHP 5.4 or above.
