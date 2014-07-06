@@ -8,9 +8,11 @@
  * - delete(&$mysqli);
  * - insert(&$mysqli);
  * - update(&$mysqli);
+ * - Table::getTableByField(&$mysqli, $fieldValue)
  *
+ * Note that the static method is dynamically generated based on the field that is queried.
  * In order to use the DAO pattern, subclasses must have the following protected static variables:
- * 
+ *
  * - dao_primaryKey: string containing the primary key's field name
  * - dao_tableName: string containing the mySQL table name
  * - dao_typeMap: array containing "field" => "type" pairs, where field is the field name and type
@@ -21,6 +23,133 @@
  **/
 abstract class MySQLDAO
 {
+    /**
+     *
+     * dynamically provides getTableByField() static methods
+     *
+     * The method name must conform to getTableByField() and take exactly two parameters:
+     *
+     * - $mysqli: pointer to a mySQL connection
+     * - $fieldValue: value to search for 
+     *
+     * @param string method name being called
+     * @param array arguments to the array
+     * @throws BadMethodCallException if the method name is malformed
+     * @throws mysqli_sql_exception if a mySQL error occurs
+     * @throws ReflectionException if the class cannot be reflected
+     * @throws DomainException if the SQL query returns empty set
+     **/
+    public static function __callStatic($methodName, $argv)
+    {
+        // verify the method actually should exist: getFooByBar()
+        $className = get_called_class();
+        $matches   = array();
+        if(preg_match("/^get${className}By(\w+)$/", $methodName, $matches) !== 1)
+        {
+            throw(new BadMethodCallException("Unable to find method: $methodName"));
+        }
+
+        // verify the field exists    
+        $field = lcfirst($matches[1]);
+        if(isset(static::$dao_typeMap[$field]) === false)
+        {
+            throw(new BadMethodCallException("Unable to find field: $field"));
+        }
+        $fieldType = static::$dao_typeMap[$field];
+
+        // extract arguments
+        if(count($argv) !== 2)
+        {
+            throw(new BadMethodCallException("Incorrect number of arguments: " . count($argv) . ", expected 2"));
+        }
+        $mysqli = $argv[0];
+        $search = $argv[1];
+
+        // now starts the main mySQL part...
+        // ...handle degenerate cases
+        if(is_object($mysqli) === false || get_class($mysqli) !== "mysqli")
+        {
+            throw(new mysqli_sql_exception("Non mySQL pointer detected"));
+        }
+
+        // create query template
+        $fieldList = static::dao_generateFieldList(false);
+        $query     = "SELECT $fieldList FROM " . static::$dao_tableName . " WHERE $field = ?";
+
+        // prepare the query statement
+        $statement = $mysqli->prepare($query);
+        if($statement === false)
+        {
+            throw(new mysqli_sql_exception("Unable to prepare statement: $query"));
+        }
+
+        // bind parameters to the query template
+        $argv     = array();
+        $argv[0]  = $fieldType;
+        $argv[1]  = &$search;
+        $wasClean = call_user_func_array(array($statement, "bind_param"), $argv);
+        if($wasClean === false)
+        {
+            throw(new mysqli_sql_exception("Unable to bind parameters"));
+        }
+
+        // okay now do it
+        if($statement->execute() === false)
+        {
+            throw(new mysqli_sql_exception("Unable to execute statement"));
+        }
+
+        $dataset = array();
+        $result  = $statement->get_result();
+        while(($row = $result->fetch_assoc()) !== null)
+        {
+            // reflect the class
+            try
+            {
+                $reflector  = new ReflectionClass(get_called_class());
+                $item       = $reflector->newInstanceWithoutConstructor();
+                $properties = $reflector->getProperties();
+                foreach($properties as $property)
+                {
+                    // add member variables from the mySQL row
+                    $propertyName = $property->getName();
+                    if(array_key_exists($property->getName(), $row) === true)
+                    {
+                        $property->setAccessible(true);
+                        $property->setValue($item, $row[$propertyName]);
+                    }
+                }
+            }
+            catch(ReflectionException $exception)
+            {
+                throw(new ReflectionException("Unable to reflect " . get_called_class(), 0, $exception));
+            }
+            
+            // re-reflect the class and add it to the result array
+            $dataset[] = $item;
+        }
+
+        // clean up the statement
+        $statement->close();
+        
+        // decide what to return...
+        // ... empty set? throw an exception
+        if(empty($dataset))
+        {
+            throw(new DomainException("Unable to get " . get_called_class() . " by $field: empty set"));
+        }
+        // ...one result? return just the item
+        else if(count($dataset) === 1)
+        {
+            return($dataset[0]);
+        }
+        // many results? return the entire array
+        else
+        {
+            return($dataset);
+        }
+    }
+
     /**
      * generates an array to pass to mysqli_stmt::bind_param()
      *
@@ -52,7 +181,7 @@ abstract class MySQLDAO
      * @param boolean whether to omit the primary key
      * @return string comma separated field list
      **/
-    protected function dao_generateFieldList($omitPrimaryKey)
+    protected static function dao_generateFieldList($omitPrimaryKey)
     {
         // get the fields & filter the primary key
         $fields = get_class_vars(get_called_class());
@@ -172,7 +301,7 @@ abstract class MySQLDAO
         }
 
         // create query template
-        $fieldList  = $this->dao_generateFieldList(true);
+        $fieldList  = static::dao_generateFieldList(true);
         $parameters = $this->dao_generateParameters(substr_count($fieldList, ",") + 1);
         $query      = "INSERT INTO " . static::$dao_tableName . "($fieldList) VALUES($parameters)";
 
@@ -228,7 +357,7 @@ abstract class MySQLDAO
         }
 
         // create query template
-        $fieldList  = $this->dao_generateFieldList(true);
+        $fieldList  = static::dao_generateFieldList(true);
         $parameters = $this->dao_generateUpdateParameters($fieldList);
         $query      = "UPDATE " . static::$dao_tableName . " SET $parameters WHERE " . static::$dao_primaryKey . " = ?";
 
