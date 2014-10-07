@@ -58,13 +58,13 @@ class Address extends MySQLDAO
     /**
      * constructor for Address
      *
-     * @param integer new value of id
-     * @param string new value of name
-     * @param string new value of first line of street address
-     * @param string new value of second line of street address
-     * @param string new value of city
-     * @param string new value of state
-     * @param string new value of zip
+     * @param int $newId new value of id
+     * @param string $newName new value of name
+     * @param string $newStreet1 new value of first line of street address
+     * @param string $newStreet2 new value of second line of street address
+     * @param string $newCity new value of city
+     * @param string $newState new value of state
+     * @param string $newZip new value of zip
      * @throws RuntimeException if invalid inputs detected
      **/
     public function __construct($newId, $newName, $newStreet1, $newStreet2, $newCity, $newState, $newZip)
@@ -97,7 +97,7 @@ class Address extends MySQLDAO
     /**
      * mutator method for id
      *
-     * @param integer new value of id
+     * @param int $newId new value of id
      * @throws RangeException if id is negative
      * @throws UnexpectedValueException if id is invalid
      **/
@@ -144,7 +144,7 @@ class Address extends MySQLDAO
     /**
      * mutator method for name
      *
-     * @param string new value of name
+     * @param string $newName new value of name
      * @throws UnexpectedValueException if name is empty
      **/
     public function setName($newName)
@@ -176,7 +176,7 @@ class Address extends MySQLDAO
     /**
      * mutator method for first line of street address
      *
-     * @param string new value of first line of street address
+     * @param string $newStreet1 new value of first line of street address
      * @throws UnexpectedValueException if location is empty
      **/
     public function setStreet1($newStreet1)
@@ -208,7 +208,7 @@ class Address extends MySQLDAO
     /**
      * mutator method for second line of street address
      *
-     * @param string new value of second line of street address
+     * @param string $newStreet2 new value of second line of street address
      **/
     public function setStreet2($newStreet2)
     {
@@ -239,7 +239,7 @@ class Address extends MySQLDAO
     /**
      * mutator method for city
      *
-     * @param string new value of city
+     * @param string $newCity new value of city
      * @throws UnexpectedValueException if location is empty
      **/
     public function setCity($newCity)
@@ -271,7 +271,7 @@ class Address extends MySQLDAO
     /**
      * mutator method for state
      *
-     * @param string new value of state
+     * @param string $newState new value of state
      * @throws UnexpectedValueException if state is invalid
      **/
     public function setState($newState)
@@ -303,7 +303,7 @@ class Address extends MySQLDAO
     /**
      * mutator method for zip
      *
-     * @param string new value of zip
+     * @param string $newZip new value of zip
      * @throws UnexpectedValueException if zip is invalid
      **/
     public function setZip($newZip)
