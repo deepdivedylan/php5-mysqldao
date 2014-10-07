@@ -18,7 +18,7 @@
  * - dao_typeMap: array containing "field" => "type" pairs, where field is the field name and type
  * is the data type according to mysqli_stmt::bind_param().
  *
- * @author Dylan McDonald <dylanm@deepdivecoders.com>
+ * @author Dylan McDonald <dmcdonald21@cnm.edu>
  * @see <http://www.php.net/manual/en/mysqli-stmt.bind-param.php>
  **/
 abstract class MySQLDAO
@@ -30,10 +30,11 @@ abstract class MySQLDAO
      * The method name must conform to getTableByField() and take exactly two parameters:
      *
      * - $mysqli: pointer to a mySQL connection
-     * - $fieldValue: value to search for 
+     * - $fieldValue: value to search for
      *
-     * @param string method name being called
-     * @param array arguments to the array
+     * @param string $methodName method name being called
+     * @param array $argv arguments to the array
+     * @return mixed object or array objects if found, null if not
      * @throws BadMethodCallException if the method name is malformed
      * @throws mysqli_sql_exception if a mySQL error occurs
      * @throws ReflectionException if the class cannot be reflected
@@ -153,7 +154,7 @@ abstract class MySQLDAO
     /**
      * generates an array to pass to mysqli_stmt::bind_param()
      *
-     * @param string comma separated field list
+     * @param string $fieldList comma separated field list
      * @return array arguments to pass to mysqli_stmt::bind_param()
      * @see <http://www.php.net/manual/en/mysqli-stmt.bind-param.php>
      **/
@@ -178,7 +179,7 @@ abstract class MySQLDAO
     /**
      * generates a comma separated field list
      *
-     * @param boolean whether to omit the primary key
+     * @param boolean $omitPrimaryKey whether to omit the primary key
      * @return string comma separated field list
      **/
     protected static function dao_generateFieldList($omitPrimaryKey)
@@ -209,7 +210,7 @@ abstract class MySQLDAO
     /**
      * generates placeholders for an INSERT query template
      *
-     * @param integer number of fields to template
+     * @param int $numFields number of fields to template
      * @return string templated placeholders
      **/
     protected function dao_generateParameters($numFields)
@@ -222,7 +223,7 @@ abstract class MySQLDAO
     /**
      * generates placeholders for an UPDATE query template
      *
-     * @param string comma separated field list
+     * @param string $fieldList comma separated field list
      * @return string templated placeholders
      **/
     protected function dao_generateUpdateParameters($fieldList)
@@ -234,7 +235,7 @@ abstract class MySQLDAO
     /**
      * deletes this object from mySQL
      *
-     * @param mysqli pointer to valid mysqli connection
+     * @param resource &$mysqli pointer to valid mysqli connection
      * @throws mysqli_sql_exception if a mySQL error occurs
      **/
     public function delete(&$mysqli)
@@ -242,7 +243,7 @@ abstract class MySQLDAO
         // handle degenerate cases
         if(is_object($mysqli) === false || get_class($mysqli) !== "mysqli")
         {
-            throw(new Exception("Non mySQL pointer detected"));
+            throw(new mysqli_sql_exception("Non mySQL pointer detected"));
         }
 
         // ensure the primary key is null
@@ -283,7 +284,7 @@ abstract class MySQLDAO
     /**
      * inserts this object to mySQL
      *
-     * @param mysqli pointer to valid mysqli connection
+     * @param resource &$mysqli pointer to valid mysqli connection
      * @throws mysqli_sql_exception if a mySQL error occurs
      **/
     public function insert(&$mysqli)
@@ -291,7 +292,7 @@ abstract class MySQLDAO
         // handle degenerate cases
         if(is_object($mysqli) === false || get_class($mysqli) !== "mysqli")
         {
-            throw(new Exception("Non mySQL pointer detected"));
+            throw(new mysqli_sql_exception("Non mySQL pointer detected"));
         }
 
         // ensure the primary key is null
@@ -339,7 +340,7 @@ abstract class MySQLDAO
     /**
      * updates this object in mySQL
      *
-     * @param mysqli pointer to valid mysqli connection
+     * @param resource &$mysqli pointer to valid mysqli connection
      * @throws mysqli_sql_exception if a mySQL error occurs
      **/
     public function update(&$mysqli)
@@ -347,7 +348,7 @@ abstract class MySQLDAO
         // handle degenerate cases
         if(is_object($mysqli) === false || get_class($mysqli) !== "mysqli")
         {
-            throw(new Exception("Non mySQL pointer detected"));
+            throw(new mysqli_sql_exception("Non mySQL pointer detected"));
         }
 
         // ensure the primary key is not null
